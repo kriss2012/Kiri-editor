@@ -1,0 +1,39 @@
+AGENT PROCESSING PIPELINE – Kiri Editor
+========================================
+
+User Request
+     |
+API Gateway
+(Rate limit check → JWT validation → Action routing)
+     |
+Agent Manager
+(Create task record → Assign priority → Select queue topic)
+     |
+Task Database (SQL)
+(INSERT agent_tasks, status = PENDING)
+     |
+Message Queue (Kafka)
+(Publish to topic: agent.<agent_type>)
+     |
+Agent Worker
+(Pull task from queue → Acquire lock → Update status: IN_PROGRESS)
+     |
+Processing Engine
+(Feed input to AI model → Parse output → Validate)
+     |
+Database
+(MongoDB: Save result to agent_outputs)
+(SQL: UPDATE agent_tasks SET status = COMPLETED, result = ...)
+(Redis: Invalidate cached results for this project)
+     |
+Sync Service
+(Emit WebSocket event: AgentTaskCompleted)
+     |
+WebSocket Server
+(Broadcast to project room: project_<project_id>)
+     |
+Editor (Client)
+(Receive event → Display result in editor panel)
+     |
+User
+(Views generated output ✓)
