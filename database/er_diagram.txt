@@ -1,0 +1,75 @@
+ER DIAGRAM – Multi-Agent Editor System
+======================================
+
+Users
+-----
+  user_id    (PK)
+  name
+  email
+  password
+  role
+  created_at
+
+Projects
+--------
+  project_id  (PK)
+  user_id     (FK → Users.user_id)
+  project_name
+  description
+  created_at
+
+Files
+-----
+  file_id     (PK)
+  project_id  (FK → Projects.project_id)
+  file_name
+  file_content
+  updated_at
+
+AgentTasks
+----------
+  task_id     (PK)
+  project_id  (FK → Projects.project_id)
+  file_id     (FK → Files.file_id)
+  agent_type
+  status
+  input_data
+  result
+  priority
+  created_at
+  completed_at
+
+Versions
+--------
+  version_id  (PK)
+  file_id     (FK → Files.file_id)
+  content
+  created_by  (FK → Users.user_id)
+  created_at
+
+------------------------------------------------------
+RELATIONSHIPS
+------------------------------------------------------
+
+Users ──────────────┐
+   (1)              │ (N)
+                 Projects ──────────────┐
+                    (1)                 │ (N)
+                                      Files ──────────┐
+                                        (1)           │ (N)
+                                                   Versions
+
+Projects ──── (N) AgentTasks
+Files ────── (N) AgentTasks
+
+------------------------------------------------------
+NOSQL (MongoDB) – project_memory collection
+------------------------------------------------------
+
+ProjectMemory
+-------------
+  project_id      (ref → SQL projects.project_id)
+  chat_history    []
+  agent_outputs   []
+  context_memory  []
+  logs            []
