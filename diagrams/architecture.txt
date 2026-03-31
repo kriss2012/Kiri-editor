@@ -1,0 +1,55 @@
+COMPLETE ARCHITECTURE DIAGRAM – Kiri Editor (Multi-Agent System)
+=================================================================
+
+                            Users
+                              |
+                         API Gateway
+                         (Nginx/Kong)
+                              |
+                         Load Balancer
+                         (AWS ELB)
+                              |
+                 -----------------------
+                 | Application Servers |
+                 | (Node.js / Python)  |
+                 -----------------------
+                              |
+              --------------------------------
+              |  Editor Service              |
+              |  Agent Manager Service       |
+              |  Auth Service                |
+              |  Sync Service                |
+              --------------------------------
+                              |
+                       Message Queue
+                    (Kafka / RabbitMQ)
+                              |
+                 -------------------
+                 | Agents Cluster  |
+                 |  Doc Agent      |
+                 |  Code Agent     |
+                 |  Search Agent   |
+                 |  Explain Agent  |
+                 |  Debug Agent    |
+                 |  Test Agent     |
+                 -------------------
+                              |
+                            Redis
+                        (Cache / Sessions)
+                              |
+               --------------------------------
+               | SQL Database (PostgreSQL)    |
+               | NoSQL Database (MongoDB)     |
+               --------------------------------
+                              |
+                        File Storage
+                          (AWS S3)
+                              |
+                             CDN
+                        (Cloudflare)
+                              |
+                         Monitoring
+                   (Prometheus + Grafana)
+                              |
+                          Kubernetes
+                     (Container Orchestration)
