@@ -1,0 +1,43 @@
+AGENT FLOW DIAGRAM – Kiri Editor
+=================================
+
+User Request (Agent Task)
+         |
+    API Gateway
+         |
+   Agent Manager
+   (validates, creates task)
+         |
+    Task Database
+    (status: PENDING)
+         |
+   Message Queue
+   (Kafka topic: agent.<type>)
+         |
+   Agent Worker
+   (picks task from queue)
+         |
+  Processing Engine
+  (AI Model / LLM call)
+         |
+    Database
+    (saves result → MongoDB)
+    (updates task → SQL)
+         |
+   Sync Service
+   (broadcasts via WebSocket)
+         |
+      Editor
+   (displays result)
+         |
+       User
+   (sees output ✓)
+
+
+AGENT TYPES:
+  documentation → Documentation Agent
+  code          → Code Agent
+  explanation   → Explanation Agent
+  search        → Search Agent
+  debug         → Debug Agent
+  test          → Test Agent
