@@ -7,11 +7,11 @@ import Editor from './components/Editor';
 import AgentPanel from './components/AgentPanel';
 import ChatOutput from './components/ChatOutput';
 import StatusBar from './components/StatusBar';
-import API from './services/api';
+import { AuthAPI, EditorAPI, AgentAPI } from './services/api';
 import './index.css';
 
 // ─── Constants ────────────────────────────────────────────
-const SOCKET_URL = 'http://localhost:4000';
+const SOCKET_URL = 'http://localhost:3004';
 
 // ─── Helpers ──────────────────────────────────────────────
 function getTime() {
@@ -56,7 +56,7 @@ export default function App() {
   useEffect(() => {
     const token = localStorage.getItem('kiri_token');
     if (token) {
-      API.get('/health').then(() => {
+      AuthAPI.get('/health').then(() => {
         // token valid — try to restore user info
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
@@ -161,7 +161,7 @@ export default function App() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
       try {
-        await API.put(`/files/${fileId}`, { fileContent: value });
+        await EditorAPI.put(`/files/${fileId}`, { fileContent: value });
       } catch (err) {
         console.error('Auto-save failed:', err.message);
       }
@@ -173,7 +173,7 @@ export default function App() {
     e.preventDefault();
     if (!newFileName.trim() || !project) return;
     try {
-      const { data } = await API.post('/files', {
+      const { data } = await EditorAPI.post('/files', {
         projectId: project.project_id,
         fileName: newFileName,
         fileContent: '',
@@ -191,7 +191,7 @@ export default function App() {
   // ── Delete file ────────────────────────────────────────────
   async function handleDeleteFile(fileId) {
     if (!confirm('Delete this file?')) return;
-    await API.delete(`/files/${fileId}`);
+    await EditorAPI.delete(`/files/${fileId}`);
     setFiles(prev => prev.filter(f => f.file_id !== fileId));
     handleTabClose(fileId);
   }
@@ -217,7 +217,7 @@ export default function App() {
 
     try {
       const token = localStorage.getItem('kiri_token');
-      const response = await fetch('/api/agents/run', {
+      const response = await fetch('http://localhost:3003/api/agents/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
