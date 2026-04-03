@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import API from '../services/api';
+import { AuthAPI } from '../services/api';
 
 export default function AuthPage({ onAuth }) {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
@@ -12,12 +12,12 @@ export default function AuthPage({ onAuth }) {
     setError('');
     setLoading(true);
     try {
-      const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
+      const endpoint = mode === 'login' ? '/login' : '/register';
       const payload = mode === 'login'
         ? { email: form.email, password: form.password }
         : { name: form.name, email: form.email, password: form.password };
 
-      const { data } = await API.post(endpoint, payload);
+      const { data } = await AuthAPI.post(endpoint, payload);
       localStorage.setItem('kiri_token', data.token);
       onAuth(data.user);
     } catch (err) {
