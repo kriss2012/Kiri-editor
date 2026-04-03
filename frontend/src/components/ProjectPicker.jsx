@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../services/api';
+import { EditorAPI } from '../services/api';
 
 export default function ProjectPicker({ user, onOpenProject, onLogout }) {
   const [projects, setProjects] = useState([]);
@@ -14,7 +14,7 @@ export default function ProjectPicker({ user, onOpenProject, onLogout }) {
   async function fetchProjects() {
     setLoading(true);
     try {
-      const { data } = await API.get('/projects');
+      const { data } = await EditorAPI.get('/projects');
       setProjects(data);
     } catch (err) {
       console.error(err);
@@ -28,12 +28,12 @@ export default function ProjectPicker({ user, onOpenProject, onLogout }) {
     if (!newName.trim()) return;
     setCreating(true);
     try {
-      const { data } = await API.post('/projects', { projectName: newName, description: newDesc });
+      const { data } = await EditorAPI.post('/projects', { projectName: newName, description: newDesc });
       setShowModal(false);
       setNewName(''); setNewDesc('');
       await fetchProjects();
       // Auto-open the new project
-      const { data: full } = await API.get(`/projects/${data.projectId}`);
+      const { data: full } = await EditorAPI.get(`/projects/${data.projectId}`);
       onOpenProject(full);
     } catch (err) {
       console.error(err);
@@ -45,7 +45,7 @@ export default function ProjectPicker({ user, onOpenProject, onLogout }) {
   async function deleteProject(e, projectId) {
     e.stopPropagation();
     if (!confirm('Delete this project?')) return;
-    await API.delete(`/projects/${projectId}`);
+    await EditorAPI.delete(`/projects/${projectId}`);
     fetchProjects();
   }
 
@@ -92,7 +92,7 @@ export default function ProjectPicker({ user, onOpenProject, onLogout }) {
               id={`project-${p.project_id}`}
               className="project-card"
               onClick={async () => {
-                const { data } = await API.get(`/projects/${p.project_id}`);
+                const { data } = await EditorAPI.get(`/projects/${p.project_id}`);
                 onOpenProject(data);
               }}
             >
