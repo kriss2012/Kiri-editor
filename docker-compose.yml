@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  # Database: PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: kiri-postgres
+    environment:
+      POSTGRES_DB: kiri_editor
+      POSTGRES_USER: kiri
+      POSTGRES_PASSWORD: kiri_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/sql_schema.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # Cache: Redis
+  redis:
+    image: redis:7-alpine
+    container_name: kiri-redis
+    ports:
+      - "6379:6379"
+
+  # Auth Service
+  auth-service:
+    build: ./backend/auth-service
+    container_name: kiri-auth
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+
+  # Editor Service
+  editor-service:
+    build: ./backend/editor-service
+    container_name: kiri-editor
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+
+  # Agent Manager
+  agent-manager:
+    build: ./backend/agent-manager
+    container_name: kiri-agents
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3003
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+
+  # Sync Service
+  sync-service:
+    build: ./backend/sync-service
+    container_name: kiri-sync
+    environment:
+      PORT: 3004
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3004:3004"
+    depends_on:
+      - redis
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: kiri-ui
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - editor-service
+      - sync-service
+
+volumes:
+  pgdata:
