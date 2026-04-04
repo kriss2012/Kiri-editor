@@ -22,6 +22,21 @@ services:
     ports:
       - "6379:6379"
 
+  # API Gateway (Nginx)
+  nginx-gateway:
+    image: nginx:alpine
+    container_name: kiri-gateway
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - editor-service
+      - agent-manager
+      - sync-service
+      - frontend
+
   # Auth Service
   auth-service:
     build: ./backend/auth-service
@@ -30,8 +45,7 @@ services:
       DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
       JWT_SECRET: kiri_secret_key_2026
       PORT: 3001
-    ports:
-      - "3001:3001"
+    # ports removed, internal exposure via depends_on/links
     depends_on:
       - postgres
 
@@ -43,8 +57,6 @@ services:
       DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
       JWT_SECRET: kiri_secret_key_2026
       PORT: 3002
-    ports:
-      - "3002:3002"
     depends_on:
       - postgres
 
@@ -56,8 +68,6 @@ services:
       DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
       JWT_SECRET: kiri_secret_key_2026
       PORT: 3003
-    ports:
-      - "3003:3003"
     depends_on:
       - postgres
 
@@ -68,8 +78,6 @@ services:
     environment:
       PORT: 3004
       REDIS_URL: redis://redis:6379
-    ports:
-      - "3004:3004"
     depends_on:
       - redis
 
@@ -77,12 +85,28 @@ services:
   frontend:
     build: ./frontend
     container_name: kiri-ui
-    ports:
-      - "80:80"
     depends_on:
       - auth-service
       - editor-service
       - sync-service
+
+  # Monitoring: Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: kiri-prometheus
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  # Monitoring: Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: kiri-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
 volumes:
   pgdata:
