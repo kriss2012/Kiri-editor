@@ -11,7 +11,7 @@ import { AuthAPI, EditorAPI, AgentAPI } from './services/api';
 import './index.css';
 
 // ─── Constants ────────────────────────────────────────────
-const SOCKET_URL = 'http://localhost:3004';
+const SOCKET_URL = 'http://localhost/sync';
 
 // ─── Helpers ──────────────────────────────────────────────
 function getTime() {
