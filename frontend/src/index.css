@@ -841,3 +841,98 @@ html, body, #root {
 .items-center { align-items: center; }
 .gap-2 { gap: 8px; }
 .mt-auto { margin-top: auto; }
+/* ─── Terminal Panel ─────────────────────────────────────── */
+.terminal-panel {
+  height: 200px;
+  background: var(--bg-darkest);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 50;
+}
+
+.terminal-header {
+  height: 32px;
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+
+.terminal-tabs {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+}
+
+.terminal-tab {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  padding-top: 2px;
+}
+
+.terminal-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+.terminal-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.terminal-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terminal-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.terminal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: #000;
+}
+
+.terminal-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 10px 0;
+}
+
+.terminal-line {
+  margin-bottom: 3px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-time { color: var(--text-muted); margin-right: 8px; }
+.log-source { color: var(--accent-hover); margin-right: 8px; font-weight: 600; }
+
+.terminal-line.info .log-content { color: #d0d0d0; }
+.terminal-line.error .log-content { color: var(--error); }
+.terminal-line.success .log-content { color: var(--success); }
+.terminal-line.warn .log-content { color: var(--warning); }
