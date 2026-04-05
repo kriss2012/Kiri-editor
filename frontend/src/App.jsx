@@ -7,6 +7,7 @@ import Editor from './components/Editor';
 import AgentPanel from './components/AgentPanel';
 import ChatOutput from './components/ChatOutput';
 import StatusBar from './components/StatusBar';
+import TerminalPanel from './components/TerminalPanel';
 import { AuthAPI, EditorAPI, AgentAPI } from './services/api';
 import './index.css';
 
@@ -52,6 +53,20 @@ export default function App() {
   const [showNewFileModal, setShowNewFileModal] = useState(false);
   const [newFileName, setNewFileName] = useState('');
 
+  // Terminal state
+  const [terminalLogs, setTerminalLogs] = useState([]);
+  const [showTerminal, setShowTerminal] = useState(true);
+
+  // ── Logging Helper ──────────────────────────────────────
+  const logSystem = useCallback((content, type = 'info', source = 'system') => {
+    setTerminalLogs(prev => [...prev, {
+      timestamp: Date.now(),
+      content,
+      type,
+      source
+    }]);
+  }, []);
+
   // ── Auto-login from localStorage ────────────────────────
   useEffect(() => {
     const token = localStorage.getItem('kiri_token');
@@ -77,12 +92,19 @@ export default function App() {
     const socket = io(SOCKET_URL, { transports: ['websocket'] });
     socketRef.current = socket;
 
-    socket.on('connect', () => setWsConnected(true));
-    socket.on('disconnect', () => setWsConnected(false));
+    socket.on('connect', () => {
+      setWsConnected(true);
+      logSystem('Connected to Real-time Sync Service', 'success', 'network');
+    });
+    socket.on('disconnect', () => {
+      setWsConnected(false);
+      logSystem('Disconnected from Real-time Sync Service', 'error', 'network');
+    });
 
     socket.on('file-updated', ({ fileId, content }) => {
       setLocalContent(prev => ({ ...prev, [fileId]: content }));
       setFiles(prev => prev.map(f => f.file_id === fileId ? { ...f, file_content: content } : f));
+      logSystem(`Remote update received for file ${fileId}`, 'info', 'sync');
     });
 
     return () => { socket.disconnect(); };
@@ -162,8 +184,10 @@ export default function App() {
     saveTimer = setTimeout(async () => {
       try {
         await EditorAPI.put(`/files/${fileId}`, { fileContent: value });
+        logSystem(`Auto-saved ${files.find(f => f.file_id === fileId)?.file_name}`, 'success', 'editor');
       } catch (err) {
         console.error('Auto-save failed:', err.message);
+        logSystem(`Save failed: ${err.message}`, 'error', 'editor');
       }
     }, 2000);
   }, [project]);
@@ -214,6 +238,7 @@ export default function App() {
 
     setMessages(prev => [...prev, newMsg]);
     setAgentRunning(true);
+    logSystem(`Started ${selectedAgent} for ${activeFile.file_name}`, 'info', 'agent');
 
     try {
       const token = localStorage.getItem('kiri_token');
@@ -259,6 +284,7 @@ export default function App() {
               if (socketRef.current && project) {
                 socketRef.current.emit('agent-done', { projectId: project.project_id, taskId: evt.taskId });
               }
+              logSystem(`Agent task ${evt.taskId} completed via OpenRouter`, 'success', 'agent');
             } else if (evt.type === 'error') {
               setMessages(prev => prev.map(m =>
                 m.id === msgId ? { ...m, content: m.content + `\n\n**Error:** ${evt.message}`, streaming: false } : m
@@ -329,15 +355,23 @@ export default function App() {
           onOpenProjects={() => setView('projects')}
         />
 
-        {/* Center: Monaco Editor */}
-        <Editor
-          openTabs={openTabs}
-          activeFileId={activeFileId}
-          onTabSelect={setActiveFileId}
-          onTabClose={handleTabClose}
-          onContentChange={handleContentChange}
-          files={files}
-        />
+        {/* Center: Monaco Editor + Terminal */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <Editor
+            openTabs={openTabs}
+            activeFileId={activeFileId}
+            onTabSelect={setActiveFileId}
+            onTabClose={handleTabClose}
+            onContentChange={handleContentChange}
+            files={files}
+          />
+          <TerminalPanel 
+            logs={terminalLogs} 
+            isOpen={showTerminal} 
+            onClose={() => setShowTerminal(false)}
+            onClear={() => setTerminalLogs([])}
+          />
+        </div>
 
         {/* Right: Agent Panel + Chat Output */}
         <div style={{ display: 'flex', flexDirection: 'column', width: 'var(--agent-width)', borderLeft: '1px solid var(--border)', overflow: 'hidden' }}>
