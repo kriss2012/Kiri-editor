@@ -1,14 +1,24 @@
 /**
- * Agent Worker Logic (Real AI powered by Google Gemini)
- * Phase 4 Implementation: Transition from Simulation to Real Intelligence
+ * Agent Worker Logic (Powered by OpenRouter)
+ * Phase 5 Implementation: Managed AI with OpenRouter and Redis Caching
  */
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const OpenAI = require("openai");
+const crypto = require('crypto');
+const { getCachedResult, setCachedResult } = require('./cache');
 require('dotenv').config();
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "INSERT_KEY_HERE");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Initialize OpenRouter Client (OpenAI standard)
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY || "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",
+  defaultHeaders: {
+    "HTTP-Referer": "https://kiri-editor.io", // Optional
+    "X-Title": "Kiri Editor", // Optional
+  }
+});
+
+const DEFAULT_MODEL = "google/gemini-flash-1.5"; // Efficient for coding/analysis
 
 const agents = {
   documentation: {
@@ -38,28 +48,58 @@ const agents = {
 };
 
 /**
- * Run an agent task using Gemini API with streaming
+ * Generate a hash for inputs to facilitate caching
+ */
+function getInputHash(inputData) {
+  return crypto.createHash('md5').update(inputData || '').digest('hex');
+}
+
+/**
+ * Run an agent task using OpenRouter with streaming and Redis caching
  */
 async function runAgent(agentType, inputData, fileName, onChunk) {
   const agent = agents[agentType];
   if (!agent) throw new Error(`Unknown agent type: ${agentType}`);
 
+  const inputHash = getInputHash(inputData);
   const promptText = agent.prompt(inputData || '// (empty file)', fileName || 'untitled.js');
 
-  try {
-    const result = await model.generateContentStream(promptText);
-    let fullText = "";
+  // 1. Check Redis Cache First
+  const cached = await getCachedResult(agentType, fileName, inputHash);
+  if (cached) {
+    console.log(`[Cache Hit] Serving result for ${agentType} on ${fileName}`);
+    if (onChunk) onChunk(cached);
+    return cached;
+  }
 
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      fullText += chunkText;
-      if (onChunk) onChunk(chunkText);
+  // 2. If not cached, call OpenRouter
+  console.log(`[Cache Miss] Calling OpenRouter for ${agentType} on ${fileName}`);
+  try {
+    const stream = await openai.chat.completions.create({
+      model: DEFAULT_MODEL,
+      messages: [
+        { role: "system", content: "You are an AI assistant integrated into a code editor. Provide helpful, accurate, and concise markdown responses." },
+        { role: "user", content: promptText }
+      ],
+      stream: true,
+    });
+
+    let fullText = "";
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        fullText += content;
+        if (onChunk) onChunk(content);
+      }
     }
+
+    // 3. Save result to cache
+    await setCachedResult(agentType, fileName, inputHash, fullText);
 
     return fullText;
   } catch (err) {
-    console.error(`[Gemini API Error] ${err.message}`);
-    throw new Error(`AI Agent failed: ${err.message}. Ensure GEMINI_API_KEY is configured.`);
+    console.error(`[OpenRouter Error] ${err.message}`);
+    throw new Error(`AI Agent failed via OpenRouter: ${err.message}. Check your API key.`);
   }
 }
 
