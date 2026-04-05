@@ -12,6 +12,19 @@ const JWT_SECRET = process.env.JWT_SECRET || 'kiri_secret_key_2026';
 app.use(cors());
 app.use(express.json());
 
+// Rate Limiting — 10 req/min for auth
+const { rateLimit } = require('express-rate-limit');
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Too many auth attempts. Please wait 1 minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/login', authLimiter);
+app.use('/register', authLimiter);
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'Auth Service', timestamp: new Date().toISOString() });
