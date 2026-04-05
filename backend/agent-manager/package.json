@@ -14,7 +14,9 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.5",
     "uuid": "^9.0.1",
-    "google-generative-ai": "^0.3.0"
+    "google-generative-ai": "^0.3.0",
+    "ioredis": "^5.4.1",
+    "openai": "^4.28.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
