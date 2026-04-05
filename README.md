@@ -92,6 +92,14 @@ Users → API Gateway → Load Balancer → App Servers
 
 ---
 
-## This System Is
+## Phase 5: Production Hardening
+- **AI Service**: Transitioned to **OpenRouter** for agent tasks, supporting multiple high-performance models (Gemini, Claude, GPT).
+- **Caching**: Implemented **Redis Caching** for agent results, reducing API costs and latency.
+- **Security**: Hardened Auth Service with **rate limiting**; Nginx Gateway with **security headers** and **gzip**.
+- **Observability**: Integrated a **Real-time Terminal Panel** in the IDE for system logs and agent feedback.
+- **Deployment**: Full **Kubernetes manifests** and environment templates for production-ready orchestration.
 
+---
+
+## This System Is
 > **Production-level system design** — equivalent to **Google Docs + GitHub Copilot + ChatGPT Agents** combined, built on a distributed microservices architecture.
