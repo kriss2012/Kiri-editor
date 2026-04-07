@@ -6,8 +6,9 @@ const GATEWAY_URL = 'http://localhost';
 export const AuthAPI   = axios.create({ baseURL: `${GATEWAY_URL}/api/auth` });
 export const EditorAPI = axios.create({ baseURL: `${GATEWAY_URL}/api/editor` });
 export const AgentAPI  = axios.create({ baseURL: `${GATEWAY_URL}/api/agents` });
+export const SearchAPI = axios.create({ baseURL: `${GATEWAY_URL}/api/search` });
 
-const apis = [AuthAPI, EditorAPI, AgentAPI];
+const apis = [AuthAPI, EditorAPI, AgentAPI, SearchAPI];
 
 apis.forEach(api => {
   api.interceptors.request.use((config) => {
@@ -17,4 +18,4 @@ apis.forEach(api => {
   });
 });
 
-export default { AuthAPI, EditorAPI, AgentAPI };
+export default { AuthAPI, EditorAPI, AgentAPI, SearchAPI };
