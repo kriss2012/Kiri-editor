@@ -28,19 +28,20 @@ export default function TerminalPanel({ logs, onClear, isOpen, onClose }) {
           </button>
         </div>
       </div>
-      <div className="terminal-body" ref={scrollRef}>
-        {logs.length === 0 ? (
-          <div className="terminal-empty">No logs to display</div>
-        ) : (
-          logs.map((log, i) => (
-            <div key={i} className={`terminal-line ${log.type}`}>
-              <span className="log-time">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-              <span className="log-source">[{log.source.toUpperCase()}]</span>
-              <span className="log-content">{log.content}</span>
-            </div>
-          ))
-        )}
-      </div>
+    <div className="terminal-body" ref={scrollRef}>
+      {logs.length === 0 ? (
+        <div className="terminal-empty">Ready for system logs...</div>
+      ) : (
+        logs.map((log, i) => (
+          <div key={i} className={`terminal-line ${log.type}`}>
+            <span className="log-time">{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+            <span className={`log-badge badge-${log.type}`}>{log.type}</span>
+            <span className="log-source">[{log.source}]</span>
+            <span className="log-content">{log.content}</span>
+          </div>
+        ))
+      )}
+    </div>
     </div>
   );
 }
