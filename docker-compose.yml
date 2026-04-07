@@ -35,6 +35,7 @@ services:
       - editor-service
       - agent-manager
       - sync-service
+      - search-service
       - frontend
 
   # Auth Service
@@ -80,6 +81,17 @@ services:
       REDIS_URL: redis://redis:6379
     depends_on:
       - redis
+
+  # Search Service
+  search-service:
+    build: ./backend/search-service
+    container_name: kiri-search
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3005
+    depends_on:
+      - postgres
 
   # Frontend
   frontend:
