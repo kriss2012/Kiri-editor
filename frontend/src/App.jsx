@@ -8,7 +8,8 @@ import AgentPanel from './components/AgentPanel';
 import ChatOutput from './components/ChatOutput';
 import StatusBar from './components/StatusBar';
 import TerminalPanel from './components/TerminalPanel';
-import { AuthAPI, EditorAPI, AgentAPI } from './services/api';
+import SearchPanel from './components/SearchPanel';
+import { AuthAPI, EditorAPI, AgentAPI, SearchAPI } from './services/api';
 import './index.css';
 
 // ─── Constants ────────────────────────────────────────────
@@ -57,6 +58,9 @@ export default function App() {
   const [terminalLogs, setTerminalLogs] = useState([]);
   const [showTerminal, setShowTerminal] = useState(true);
 
+  // Sidebar view state: 'explorer' | 'search'
+  const [sidebarView, setSidebarView] = useState('explorer');
+
   // ── Logging Helper ──────────────────────────────────────
   const logSystem = useCallback((content, type = 'info', source = 'system') => {
     setTerminalLogs(prev => [...prev, {
@@ -98,7 +102,7 @@ export default function App() {
     });
     socket.on('disconnect', () => {
       setWsConnected(false);
-      logSystem('Disconnected from Real-time Sync Service', 'error', 'network');
+      logSystem('Disconnected from Real-time Sync Service', 'warn', 'network');
     });
 
     socket.on('file-updated', ({ fileId, content }) => {
@@ -284,11 +288,12 @@ export default function App() {
               if (socketRef.current && project) {
                 socketRef.current.emit('agent-done', { projectId: project.project_id, taskId: evt.taskId });
               }
-              logSystem(`Agent task ${evt.taskId} completed via OpenRouter`, 'success', 'agent');
+              logSystem(`Agent task ${evt.taskId} completed via OpenRouter`, 'ai', 'agent');
             } else if (evt.type === 'error') {
               setMessages(prev => prev.map(m =>
                 m.id === msgId ? { ...m, content: m.content + `\n\n**Error:** ${evt.message}`, streaming: false } : m
               ));
+              logSystem(`Agent error: ${evt.message}`, 'error', 'agent');
             }
           } catch {}
         }
@@ -343,17 +348,51 @@ export default function App() {
 
       {/* Main body */}
       <div className="app-body">
-        {/* Left: File Explorer */}
-        <FileExplorer
-          project={project}
-          files={files}
-          activeFileId={activeFileId}
-          onFileSelect={handleFileSelect}
-          onNewFile={() => setShowNewFileModal(true)}
-          onDeleteFile={handleDeleteFile}
-          onNewProject={() => setView('projects')}
-          onOpenProjects={() => setView('projects')}
-        />
+        {/* Left: Sidebar (File Explorer / Search) */}
+        <div style={{ display: 'flex', flexDirection: 'column', width: 'var(--sidebar-width)', borderRight: '1px solid var(--border)', background: 'var(--bg-dark)' }}>
+          {/* Sidebar Switcher */}
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--bg-darkest)' }}>
+            <button 
+              className={`icon-btn ${sidebarView === 'explorer' ? 'active' : ''}`} 
+              onClick={() => setSidebarView('explorer')}
+              style={{ flex: 1, height: 36, borderRadius: 0, borderBottom: sidebarView === 'explorer' ? '2px solid var(--accent)' : 'none' }}
+              title="File Explorer"
+            >
+              📂
+            </button>
+            <button 
+              className={`icon-btn ${sidebarView === 'search' ? 'active' : ''}`} 
+              onClick={() => setSidebarView('search')}
+              style={{ flex: 1, height: 36, borderRadius: 0, borderBottom: sidebarView === 'search' ? '2px solid var(--accent)' : 'none' }}
+              title="Search"
+            >
+              🔍
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {sidebarView === 'explorer' ? (
+              <FileExplorer
+                project={project}
+                files={files}
+                activeFileId={activeFileId}
+                onFileSelect={handleFileSelect}
+                onNewFile={() => setShowNewFileModal(true)}
+                onDeleteFile={handleDeleteFile}
+                onNewProject={() => setView('projects')}
+                onOpenProjects={() => setView('projects')}
+              />
+            ) : (
+              <SearchPanel
+                project={project}
+                onFileSelect={(f) => {
+                  setSidebarView('explorer');
+                  handleFileSelect(f);
+                }}
+              />
+            )}
+          </div>
+        </div>
 
         {/* Center: Monaco Editor + Terminal */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
