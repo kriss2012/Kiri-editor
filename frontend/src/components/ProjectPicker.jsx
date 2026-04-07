@@ -57,24 +57,32 @@ export default function ProjectPicker({ user, onOpenProject, onLogout }) {
     <div className="project-page">
       <div className="project-header">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <div style={{
-              width: 32, height: 32,
-              background: 'linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%)',
-              borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
+            <div className="logo-icon-premium" style={{
+              width: 40, height: 40,
+              background: 'linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%)',
+              borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              fontSize: 18, boxShadow: 'var(--shadow-glow)'
             }}>⚡</div>
-            <h2>Kiri Editor</h2>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>Kiri <span style={{ color: 'var(--accent-hover)' }}>Editor</span></h2>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '1px' }}>Control Center</span>
+            </div>
           </div>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 44 }}>
-            Welcome, {user.name} — choose a project to open
-          </p>
         </div>
         <div className="project-header-actions">
           <button id="btn-new-project-header" className="btn btn-primary" onClick={() => setShowModal(true)}>
-            + New Project
+            <span style={{ marginRight: 6 }}>+</span> Create Project
           </button>
-          <button id="btn-logout" className="btn btn-ghost" onClick={onLogout}>Sign Out</button>
+          <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 8px' }} />
+          <button id="btn-logout" className="btn btn-ghost" onClick={onLogout} style={{ border: 'none' }}>Sign Out</button>
         </div>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 700, marginBottom: 24, padding: '0 4px' }}>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+          Welcome back, <strong style={{ color: 'var(--text-primary)' }}>{user.name}</strong>. Continued working on your projects or start a new one.
+        </p>
       </div>
 
       {loading ? (
@@ -96,21 +104,28 @@ export default function ProjectPicker({ user, onOpenProject, onLogout }) {
                 onOpenProject(data);
               }}
             >
-              <div className="project-card-icon">📁</div>
-              <h3>{p.project_name}</h3>
-              <p>{p.description || 'No description'}</p>
-              <p style={{ marginTop: 8, fontSize: 10, color: 'var(--text-muted)' }}>
-                Created {formatDate(p.created_at)}
+              <div className="project-card-icon" style={{ fontSize: 20 }}>📦</div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{p.project_name}</h3>
+              <p style={{ height: 32, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                {p.description || 'No description provided for this project.'}
               </p>
-              <button
-                style={{
-                  marginTop: 10, fontSize: 10, color: 'var(--error)',
-                  background: 'none', border: '1px solid transparent',
-                  borderRadius: 4, cursor: 'pointer', padding: '2px 6px',
-                  fontFamily: 'var(--font-ui)'
-                }}
-                onClick={e => deleteProject(e, p.project_id)}
-              >Delete</button>
+              
+              <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>
+                  {formatDate(p.created_at)}
+                </span>
+                <button
+                  className="delete-btn-subtle"
+                  style={{
+                    fontSize: 10, color: 'var(--text-muted)',
+                    background: 'none', border: 'none',
+                    cursor: 'pointer', padding: '4px',
+                    transition: 'color 0.2s',
+                    fontFamily: 'var(--font-ui)'
+                  }}
+                  onClick={e => deleteProject(e, p.project_id)}
+                >Delete</button>
+              </div>
             </div>
           ))}
         </div>
