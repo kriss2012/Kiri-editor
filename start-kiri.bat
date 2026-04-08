@@ -1,28 +1,39 @@
 @echo off
-echo ⚡ Starting Kiri Multi-Agent Editor (Phase 4: Secure & Scalable)
+setlocal
+echo ⚡ Starting Kiri Multi-Agent Editor (Phase 6: Professional Expansion)
 echo ─────────────────────────────────────────────────────────────
+
+:: [1] Ensure Docker is running
 echo [1] Ensuring Docker is running...
 docker version >nul 2>&1
 if %errorLevel% neq 0 (
-    echo [ERROR] Docker is not running. Please start Docker Desktop and try again.
+    echo [ERROR] Docker engine is not running or unreachable.
+    echo Please make sure Docker Desktop is open and the engine has started.
+    echo.
     pause
     exit /b
 )
 
-echo [2] Checking for GEMINI_API_KEY...
-if "%GEMINI_API_KEY%"=="" (
-    echo [WARNING] GEMINI_API_KEY is not set. Agents will operate in simulation mode or fail.
+:: [2] Check for OpenRouter API Key
+echo [2] Checking for OPENROUTER_API_KEY...
+findstr "OPENROUTER_API_KEY=sk-" backend\agent-manager\.env >nul 2>&1
+if %errorLevel% neq 0 (
+    echo [WARNING] OPENROUTER_API_KEY missing in backend\agent-manager\.env
+    echo AI Agents may operate in simulation mode or fail.
 )
 
-echo [3] Launching Microservices Cluster via Docker Compose...
+:: [3] Launch Professional Microservices Cluster
+echo [3] Launching Professional Microservices Cluster...
 docker-compose up --build -d
 
 echo ─────────────────────────────────────────────────────────────
-echo ✅ Kiri Editor is launching!
+echo ✅ Kiri Professional Editor is launching!
 echo 🌐 Access the Editor at: http://localhost
-echo 📊 Monitoring (Prometheus): http://localhost:9090
-echo 📈 Dashboards (Grafana): http://localhost:3000
+echo 🔍 Search Service:      Active
+echo 🚀 Redis Caching:      Active
+echo 📊 Monitoring:          http://localhost:3000 (Grafana)
 echo ─────────────────────────────────────────────────────────────
-echo To view logs, run: docker-compose logs -f
-echo To stop, run: docker-compose down
+echo To view real-time logs: docker-compose logs -f
+echo To shutdown system:     docker-compose down
+echo ─────────────────────────────────────────────────────────────
 pause
