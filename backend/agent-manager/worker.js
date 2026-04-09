@@ -23,27 +23,90 @@ const DEFAULT_MODEL = "google/gemini-flash-1.5"; // Efficient for coding/analysi
 const agents = {
   documentation: {
     name: 'Documentation Agent',
-    prompt: (input, fileName) => `Analyze the following code from file "${fileName}" and generate a comprehensive markdown documentation. Include an overview, list of functions, classes, and usage examples.\n\nCode:\n${input}`
+    prompt: (input, fileName) => `
+You are a Technical Documentation Expert.
+Analyze the provided code from file: "${fileName}".
+Generate a high-fidelity documentation in Markdown format:
+1. **Module Overview**: Purpose of this code.
+2. **Function/Method Reference**: Name, parameters, return types, and detailed behavior.
+3. **Complexity Analysis**: Time and space complexity.
+4. **Usage Examples**: Real-world integration examples.
+Use professional tone and clear hierarchical structure.
+
+Code:
+${input}`
   },
   code: {
     name: 'Code Agent',
-    prompt: (input, fileName) => `You are a Senior Software Engineer. Refactor and improve the following code from file "${fileName}". Focus on performance, readability, and modern best practices. Return the full refactored code in a markdown block.\n\nCode:\n${input}`
+    prompt: (input, fileName) => `
+You are a Senior Software Architect.
+Review and refactor the code from file: "${fileName}".
+Ensure it follows:
+1. **Modern Patterns**: ES6+/Pythonic ways or equivalent.
+2. **Performance**: Optimize loops and resource usage.
+3. **Readability**: Consistent naming and clean structure (SOLID/DRY).
+4. **Docstrings**: Add descriptive JSDoc or Python docstrings.
+Return ONLY the full refactored code block in Markdown.
+
+Code:
+${input}`
   },
   explanation: {
     name: 'Explanation Agent',
-    prompt: (input, fileName) => `Explain the following code from file "${fileName}" in plain English. Break down the logic, detected patterns (like async/await or classes), and analyze the complexity.\n\nCode:\n${input}`
+    prompt: (input, fileName) => `
+You are a Code Mentor.
+Provide a deep technical breakdown of file: "${fileName}".
+Explain:
+1. **Mental Model**: How to think about this code.
+2. **Control Flow**: Step-by-step logic.
+3. **Advanced Features**: Explain any closures, decorators, or advanced patterns used.
+4. **Context**: How this might interact with other parts of a typical system.
+Use clear headers and bullet points.
+
+Code:
+${input}`
   },
   search: {
     name: 'Search Agent',
-    prompt: (input, fileName) => `Search for information and patterns related to this code query in file "${fileName}". Provide related documentation links and suggest best-practice resources.\n\nQuery:\n${input}`
+    prompt: (input, fileName) => `
+You are an Information Retrieval specialist.
+Analyze the following query regarding file: "${fileName}".
+Provide:
+1. **Pattern Matching**: Find where the query concepts appear in the code.
+2. **Expert Resources**: Links or mentions of official docs for the APIs used.
+3. **Best Practices**: Current industry standards for this specific problem.
+
+Query:
+${input}`
   },
   debug: {
     name: 'Debug Agent',
-    prompt: (input, fileName) => `Identify potential bugs, security vulnerabilities, or quality issues in the following code from file "${fileName}". Provide a report with severity levels and suggested fixes.\n\nCode:\n${input}`
+    prompt: (input, fileName) => `
+You are a Senior QA Engineer (SDET).
+Perform a deep static analysis of file: "${fileName}".
+Identify:
+1. **Logic Bugs**: Edge cases, race conditions, or off-by-one errors.
+2. **Security**: OWASP Top 10 risks (injection, hardcoded secrets, etc).
+3. **Reliability**: Missing error handling or unhandled promises.
+Format as a **Vulnerability Report** with Severity (Low/Medium/High) and Recommended Fixes.
+
+Code:
+${input}`
   },
   test: {
     name: 'Test Agent',
-    prompt: (input, fileName) => `Generate a complete Jest or Pytest test suite for the following code from file "${fileName}". Include unit tests, edge cases, and run instructions.\n\nCode:\n${input}`
+    prompt: (input, fileName) => `
+You are a Lead Test Engineer.
+Generate a comprehensive test suite for file: "${fileName}" using appropriate frameworks (Jest, Pytest, etc).
+Include:
+1. **Positive Tests**: Standard success paths.
+2. **Edge Cases**: Empty inputs, overflow, nulls.
+3. **Negative Tests**: Expected errors and exceptions.
+4. **Mocking**: Suggest mocks for external dependencies.
+Return the full test code in Markdown.
+
+Code:
+${input}`
   }
 };
 
