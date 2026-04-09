@@ -92,8 +92,37 @@ Users → API Gateway → Load Balancer → App Servers
 
 ---
 
+---
+
+## Getting Started (The "Workable" Flow)
+
+Professional setup is now automated for faster development:
+
+1. **Initialize Project**: Automatically setup `.env` files and verify prerequisites.
+   ```bash
+   node initialize.js
+   ```
+2. **Launch System**: Start the full microservices cluster via Docker.
+   ```bash
+   start-kiri.bat
+   ```
+3. **Check Health**: Run diagnostics to ensure all services are communicating.
+   ```bash
+   node kiri-doctor.js
+   ```
+
+---
+
+## AI Simulation Mode
+No API key? No problem. The system now includes a **Simulation Mode**. If `OPENROUTER_API_KEY` is missing, agents will return "Flavor Mock" responses so you can test the UI and workflow without immediate API costs.
+
+---
+
 ## Phase 5: Production Hardening
 - **AI Service**: Transitioned to **OpenRouter** for agent tasks, supporting multiple high-performance models (Gemini, Claude, GPT).
+- **Simulation**: Added fallback mode for development without live API keys.
+- **Diagnostics**: New `kiri-doctor.js` script for real-time service health checks.
+- **Automation**: New `initialize.js` script for rapid environment setup.
 - **Caching**: Implemented **Redis Caching** for agent results, reducing API costs and latency.
 - **Security**: Hardened Auth Service with **rate limiting**; Nginx Gateway with **security headers** and **gzip**.
 - **Observability**: Integrated a **Real-time Terminal Panel** in the IDE for system logs and agent feedback.
