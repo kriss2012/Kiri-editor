@@ -3,6 +3,13 @@ setlocal
 echo ⚡ Starting Kiri Multi-Agent Editor (Phase 6: Professional Expansion)
 echo ─────────────────────────────────────────────────────────────
 
+:: [0] Initialize Environment
+echo [0] Initializing environment...
+node initialize.js
+if %errorLevel% neq 0 (
+    echo [WARNING] Initialization script encountered issues.
+)
+
 :: [1] Ensure Docker is running
 echo [1] Ensuring Docker is running...
 docker version >nul 2>&1
@@ -10,6 +17,8 @@ if %errorLevel% neq 0 (
     echo [ERROR] Docker engine is not running or unreachable.
     echo Please make sure Docker Desktop is open and the engine has started.
     echo.
+    echo If you want to run in "Standalone Mode" (without Docker), 
+    echo please refer to docs/standalone_dev.md (Coming Soon).
     pause
     exit /b
 )
