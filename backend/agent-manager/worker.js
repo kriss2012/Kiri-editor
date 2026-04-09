@@ -9,14 +9,17 @@ const { getCachedResult, setCachedResult } = require('./cache');
 require('dotenv').config();
 
 // Initialize OpenRouter Client (OpenAI standard)
-const openai = new OpenAI({
+const apiKey = process.env.OPENROUTER_API_KEY;
+const isSimulation = !apiKey || apiKey.includes('sk-or-v1-95235b7c'); // Consider the placeholder as simulation
+
+const openai = apiKey ? new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY || "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",
+  apiKey: apiKey,
   defaultHeaders: {
-    "HTTP-Referer": "https://kiri-editor.io", // Optional
-    "X-Title": "Kiri Editor", // Optional
+    "HTTP-Referer": "https://kiri-editor.io",
+    "X-Title": "Kiri Editor",
   }
-});
+}) : null;
 
 const DEFAULT_MODEL = "google/gemini-flash-1.5"; // Efficient for coding/analysis
 
@@ -135,7 +138,32 @@ async function runAgent(agentType, inputData, fileName, onChunk) {
     return cached;
   }
 
-  // 2. If not cached, call OpenRouter
+  // 2. If simulation mode, return mock data
+  if (isSimulation) {
+    console.log(`[Simulation Mode] Generating mock response for ${agentType}`);
+    const mockResponse = `### [SIMULATION] ${agent.name} Result\n\n` + 
+      `This is a simulated response because no valid \`OPENROUTER_API_KEY\` was found.\n\n` +
+      `**Analysis of ${fileName}:**\n` +
+      `- Code length: ${inputData?.length || 0} characters\n` +
+      `- Status: Professional logic detected\n` +
+      `- Recommendation: Add a real API key to \`backend/agent-manager/.env\` for live AI analysis.\n\n` +
+      `*Sample output for ${agentType}:*\n` +
+      `The code in ${fileName} demonstrates a robust microservices pattern. However, ensure that all error boundaries are handled correctly in production.*`;
+    
+    if (onChunk) {
+      // Stream mock response slowly for effect
+      const chunks = mockResponse.split(' ');
+      for (const word of chunks) {
+        onChunk(word + ' ');
+        // await new Promise(r => setTimeout(r, 10)); // Optional: simulated delay
+      }
+    }
+    
+    await setCachedResult(agentType, fileName, inputHash, mockResponse);
+    return mockResponse;
+  }
+
+  // 3. Otherwise, call OpenRouter
   console.log(`[Cache Miss] Calling OpenRouter for ${agentType} on ${fileName}`);
   try {
     const stream = await openai.chat.completions.create({
