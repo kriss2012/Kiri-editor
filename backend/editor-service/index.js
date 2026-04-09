@@ -3,7 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const db = require('./db');
+const redis = require('redis');
 const { authMiddleware } = require('./middleware/auth');
+
+const redisClient = redis.createClient({ url: process.env.REDIS_URL || 'redis://redis:6379' });
+redisClient.on('error', (err) => console.log('Redis Client Error', err));
+redisClient.connect();
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -65,8 +70,22 @@ app.get('/api/projects/:id', authMiddleware, async (req, res) => {
     const projectRes = await db.query('SELECT * FROM projects WHERE project_id = $1 AND user_id = $2', [req.params.id, req.user.userId]);
     if (projectRes.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
 
-    const filesRes = await db.query('SELECT * FROM files WHERE project_id = $1 ORDER BY file_name', [req.params.id]);
-    res.json({ ...projectRes.rows[0], files: filesRes.rows });
+    // Try to get files from cache
+    const cacheKey = `project:${req.params.id}:files`;
+    const cachedFiles = await redisClient.get(cacheKey);
+
+    let files;
+    if (cachedFiles) {
+      files = JSON.parse(cachedFiles);
+      console.log(`Cache HIT for project ${req.params.id}`);
+    } else {
+      const filesRes = await db.query('SELECT * FROM files WHERE project_id = $1 ORDER BY file_name', [req.params.id]);
+      files = filesRes.rows;
+      await redisClient.setEx(cacheKey, 3600, JSON.stringify(files)); // Cache for 1 hour
+      console.log(`Cache MISS for project ${req.params.id}`);
+    }
+
+    res.json({ ...projectRes.rows[0], files });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -94,6 +113,10 @@ app.post('/api/files', authMiddleware, async (req, res) => {
       'INSERT INTO files (project_id, file_name, file_content, language) VALUES ($1, $2, $3, $4) RETURNING file_id',
       [projectId, fileName, fileContent || '', language || 'javascript']
     );
+
+    // Invalidate cache
+    await redisClient.del(`project:${projectId}:files`);
+
     res.status(201).json({ fileId: result.rows[0].file_id, projectId, fileName });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -115,7 +138,23 @@ app.put('/api/files/:id', authMiddleware, async (req, res) => {
       [fileContent, language, req.params.id]
     );
 
+    // Invalidate cache
+    await redisClient.del(`project:${current.rows[0].project_id}:files`);
+
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/files/:id/versions — list file versions
+app.get('/api/files/:id/versions', authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT v.*, u.name as creator_name FROM versions v LEFT JOIN users u ON v.created_by = u.user_id WHERE v.file_id = $1 ORDER BY v.created_at DESC',
+      [req.params.id]
+    );
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -124,7 +163,13 @@ app.put('/api/files/:id', authMiddleware, async (req, res) => {
 // DELETE /api/files/:id
 app.delete('/api/files/:id', authMiddleware, async (req, res) => {
   try {
+    const current = await db.query('SELECT project_id FROM files WHERE file_id = $1', [req.params.id]);
     await db.query('DELETE FROM files WHERE file_id = $1', [req.params.id]);
+
+    if (current.rows.length > 0) {
+      await redisClient.del(`project:${current.rows[0].project_id}:files`);
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
