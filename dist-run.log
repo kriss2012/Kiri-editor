@@ -1,0 +1,11 @@
+
+⚡ [Kiri Desktop] Spawning local Express engine...
+📡 [Kiri DB] Using pure JS database storage at: C:\Users\krishna\AppData\Roaming\kiri-editor-desktop\kiri.json
+✅ [Kiri Desktop] Local server started on port 4000
+
+🚀 Kiri Editor Server running on http://localhost:4000
+📡 WebSocket server ready
+🔑 API endpoints: http://localhost:4000/api
+
+[Socket] Client connected: uI3KMzm7PKlBWazHAAAB
+[Socket] uI3KMzm7PKlBWazHAAAB joined project:3e41aa85-caa3-40dc-a34a-8d53c54ffcc4
