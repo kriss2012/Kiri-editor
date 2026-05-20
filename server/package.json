@@ -1,0 +1,21 @@
+{
+  "name": "kiri-editor-server",
+  "version": "1.0.0",
+  "description": "Kiri Editor - Multi-Agent AI Code Editor Backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "kiri-editor",
+    "multi-agent",
+    "ai",
+    "code-editor"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.97.0"
+  }
+}
