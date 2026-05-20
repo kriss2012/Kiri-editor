@@ -1,0 +1,63 @@
+{
+  "collection": "project_memory",
+  "description": "NoSQL schema for MongoDB. Stores unstructured agent outputs, chat history, and AI context per project.",
+  "schema": {
+    "project_id": "string (references SQL projects.project_id)",
+    "chat_history": [
+      {
+        "message_id": "string (UUID)",
+        "sender": "user | agent",
+        "agent_type": "string (nullable, e.g. 'documentation')",
+        "content": "string",
+        "timestamp": "ISODate"
+      }
+    ],
+    "agent_outputs": [
+      {
+        "task_id": "int (references SQL agent_tasks.task_id)",
+        "agent_type": "string",
+        "output": "string",
+        "created_at": "ISODate"
+      }
+    ],
+    "context_memory": [
+      {
+        "key": "string",
+        "value": "string",
+        "embedding": "array[float]",
+        "created_at": "ISODate"
+      }
+    ],
+    "logs": [
+      {
+        "log_id": "string (UUID)",
+        "level": "info | warn | error",
+        "message": "string",
+        "service": "string",
+        "timestamp": "ISODate"
+      }
+    ]
+  },
+  "example_document": {
+    "project_id": "55",
+    "chat_history": [
+      {
+        "message_id": "abc-123",
+        "sender": "user",
+        "agent_type": null,
+        "content": "Generate docs for utils.py",
+        "timestamp": "2026-03-31T08:00:00Z"
+      },
+      {
+        "message_id": "abc-124",
+        "sender": "agent",
+        "agent_type": "documentation",
+        "content": "# utils.py\n\nThis module provides utility functions...",
+        "timestamp": "2026-03-31T08:00:05Z"
+      }
+    ],
+    "agent_outputs": [],
+    "context_memory": [],
+    "logs": []
+  }
+}
