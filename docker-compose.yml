@@ -1,0 +1,124 @@
+
+
+services:
+  # Database: PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: kiri-postgres
+    environment:
+      POSTGRES_DB: kiri_editor
+      POSTGRES_USER: kiri
+      POSTGRES_PASSWORD: kiri_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/sql_schema.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # Cache: Redis
+  redis:
+    image: redis:7-alpine
+    container_name: kiri-redis
+    ports:
+      - "6379:6379"
+
+  # API Gateway (Nginx)
+  nginx-gateway:
+    image: nginx:alpine
+    container_name: kiri-gateway
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - editor-service
+      - agent-manager
+      - sync-service
+      - search-service
+      - frontend
+
+  # Auth Service
+  auth-service:
+    build: ./backend/auth-service
+    container_name: kiri-auth
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3001
+    # ports removed, internal exposure via depends_on/links
+    depends_on:
+      - postgres
+
+  # Editor Service
+  editor-service:
+    build: ./backend/editor-service
+    container_name: kiri-editor
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3002
+    depends_on:
+      - postgres
+
+  # Agent Manager
+  agent-manager:
+    build: ./backend/agent-manager
+    container_name: kiri-agents
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3003
+    depends_on:
+      - postgres
+
+  # Sync Service
+  sync-service:
+    build: ./backend/sync-service
+    container_name: kiri-sync
+    environment:
+      PORT: 3004
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+
+  # Search Service
+  search-service:
+    build: ./backend/search-service
+    container_name: kiri-search
+    environment:
+      DATABASE_URL: postgresql://kiri:kiri_secret@postgres:5432/kiri_editor
+      JWT_SECRET: kiri_secret_key_2026
+      PORT: 3005
+    depends_on:
+      - postgres
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: kiri-ui
+    depends_on:
+      - auth-service
+      - editor-service
+      - sync-service
+
+  # Monitoring: Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: kiri-prometheus
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  # Monitoring: Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: kiri-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  pgdata:
