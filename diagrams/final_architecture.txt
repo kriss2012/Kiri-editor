@@ -1,0 +1,66 @@
+FINAL SYSTEM ARCHITECTURE – Kiri Editor (Production Level)
+===========================================================
+
+                           ┌─────────────────────────────┐
+                           │           USERS              │
+                           │  (Web App / Desktop Electron)│
+                           └─────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │         API GATEWAY          │
+                           │    (Nginx / Kong Gateway)    │
+                           │  Auth · Rate Limit · Logs    │
+                           └─────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │        LOAD BALANCER         │
+                           │         (AWS ELB)            │
+                           └─────────────────────────────┘
+                                         |
+                  ┌──────────────────────────────────────────────┐
+                  │            APPLICATION SERVERS               │
+                  │  Auth Service │ Editor Service │ Agent Mgr   │
+                  │  Sync Service │ File Service  │ Search Svc   │
+                  └──────────────────────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │        MESSAGE QUEUE         │
+                           │     (Kafka / RabbitMQ)       │
+                           └─────────────────────────────┘
+                                         |
+                  ┌──────────────────────────────────────────────┐
+                  │               AGENTS CLUSTER                 │
+                  │  Doc Agent │ Code Agent │ Search Agent       │
+                  │  Explain Agent │ Debug Agent │ Test Agent    │
+                  └──────────────────────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │        REDIS CACHE           │
+                           │  Sessions · Results · Queue  │
+                           └─────────────────────────────┘
+                                         |
+                  ┌──────────────────────────────────────────────┐
+                  │                 DATABASES                    │
+                  │  PostgreSQL (SQL) │ MongoDB (NoSQL)          │
+                  └──────────────────────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │        FILE STORAGE          │
+                           │         (AWS S3)             │
+                           └─────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │            CDN               │
+                           │  Cloudflare / CloudFront     │
+                           └─────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │         MONITORING           │
+                           │  Prometheus · Grafana · ELK  │
+                           └─────────────────────────────┘
+                                         |
+                           ┌─────────────────────────────┐
+                           │         KUBERNETES           │
+                           │   (Container Orchestration)  │
+                           │   HPA · Ingress · StatefulSet│
+                           └─────────────────────────────┘
