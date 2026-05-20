@@ -1,0 +1,39 @@
+{
+  "name": "kiri-editor-desktop",
+  "version": "1.0.0",
+  "description": "Kiri Editor - Multi-Agent AI Code Editor Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "start": "electron .",
+    "pack": "npm run build:frontend && electron-builder --dir",
+    "dist": "npm run build:frontend && electron-builder --win"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.kirieditor.app",
+    "productName": "KiriEditor",
+    "win": {
+      "target": "zip"
+    },
+    "files": [
+      "main.js",
+      "server/**/*",
+      "frontend/dist/**/*",
+      "package.json"
+    ],
+    "asar": true
+  }
+}
