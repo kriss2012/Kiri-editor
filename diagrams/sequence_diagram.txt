@@ -1,0 +1,30 @@
+SEQUENCE DIAGRAM – Kiri Editor
+================================
+
+Actors: User | API Gateway | Editor Service | Agent Manager | Queue | Agent Worker | Database | Sync Service | Editor
+
+--- File Edit Flow ---
+
+User        →  API Gateway     : PUT /files/:file_id { content }
+API Gateway →  Editor Service  : Forward request (JWT validated)
+Editor Svc  →  Database (SQL)  : UPDATE files SET content WHERE file_id
+Database    →  Editor Service  : OK
+Editor Svc  →  Sync Service    : Emit FileUpdated event
+Sync Svc    →  Editor (WS)     : Broadcast change to all connected clients
+Editor      →  User            : Show updated file (real-time)
+
+--- Agent Task Flow ---
+
+User        →  API Gateway     : POST /agents/run { agent_type, file_id }
+API Gateway →  Agent Manager   : Forward request
+Agent Mgr   →  Database (SQL)  : INSERT agent_tasks (status: PENDING)
+Agent Mgr   →  Queue (Kafka)   : Publish task message
+Queue       →  Agent Worker    : Deliver task
+Agent Wkr   →  Database (SQL)  : GET file content
+Agent Wkr   →  AI Model        : Process input_data
+AI Model    →  Agent Worker    : Return result
+Agent Wkr   →  Database (NoSQL): Save result to agent_outputs
+Agent Wkr   →  Database (SQL)  : UPDATE agent_tasks (status: COMPLETED)
+Agent Wkr   →  Sync Service    : Emit AgentTaskCompleted event
+Sync Svc    →  Editor (WS)     : Push result to client
+Editor      →  User            : Display agent output
