@@ -1,0 +1,78 @@
+{
+  "users": [],
+  "projects": [
+    {
+      "project_id": "aa77b691-1143-4340-ac6f-5a854dbbe4e6",
+      "user_id": "local",
+      "project_name": "i",
+      "description": "",
+      "custom_path": null,
+      "created_at": "2026-05-19T14:22:42.312Z"
+    }
+  ],
+  "files": [
+    {
+      "file_id": "6615be16-7aaf-4c7a-97be-06c26836ce48",
+      "project_id": "aa77b691-1143-4340-ac6f-5a854dbbe4e6",
+      "file_name": "main.js",
+      "file_content": "// Welcome to Kiri Editor!\n// Start coding here...\n\nfunction main() {\n  console.log(\"Hello, World!\");\n}\n\nmain();\n",
+      "language": "javascript",
+      "created_at": "2026-05-19T14:22:42.319Z",
+      "updated_at": "2026-05-19T14:22:42.319Z"
+    },
+    {
+      "file_id": "ba389e92-085e-49ec-8482-c147a132cf09",
+      "project_id": "aa77b691-1143-4340-ac6f-5a854dbbe4e6",
+      "file_name": "README.md",
+      "file_content": "# Welcome to Your Project! 🎉\n\nThis project serves as a starting point, created with **Kiri Editor**. It's designed to be easily extensible and a playground for your ideas, especially when leveraging AI assistance.\n\n## Getting Started\n\nJump right into building your ideas!\n\n1.  **Open `main.js`**: This is where your core application logic resides.\n2.  **Start Coding**: Begin writing your JavaScript code.\n3.  **Get AI Assistance**: Utilize the Agent Panel in Kiri Editor to get smart suggestions, refactor code, or generate new sections based on your needs.\n\n## Project Structure\n\n*   `main.js`: Your primary application file.\n*   `README.md`: This file, providing project overview and instructions.\n\n## What's Next?\n\n*   **Define Your Goal**: What do you want to build? A small utility, a game, a web component?\n*   **Explore Kiri Editor**: Familiarize yourself with its features and how to best use the AI Agent.\n*   **Iterate and Innovate**: Don't be afraid to experiment and build!\n\n---\n\nHappy Coding!\n",
+      "language": "markdown",
+      "created_at": "2026-05-19T14:22:42.322Z",
+      "updated_at": "2026-05-19T14:23:11.795Z"
+    },
+    {
+      "file_id": "7d0f824f-c1d2-40c3-8016-81ff8572baf5",
+      "project_id": "aa77b691-1143-4340-ac6f-5a854dbbe4e6",
+      "file_name": "index.html",
+      "file_content": "<!DOCTYPE html><html lang='en'><head><title>Welcome</title><style>body { perspective: 1000px; } h1 { font-size: 50px; transform-style: preserve-3d; transform: rotateY(45deg); }</style></head><body><h1>Welcome to our website!</h1></body></html>",
+      "language": "javascript",
+      "created_at": "2026-05-19T14:24:32.867Z",
+      "updated_at": "2026-05-19T14:25:02.997Z"
+    }
+  ],
+  "agent_tasks": [
+    {
+      "task_id": "499c5397-fb60-423b-a667-81f11d6bdc13",
+      "project_id": "aa77b691-1143-4340-ac6f-5a854dbbe4e6",
+      "file_id": "ba389e92-085e-49ec-8482-c147a132cf09",
+      "agent_type": "code",
+      "input_data": "# i\n\nThis project was created with **Kiri Editor**.\n\n## Getting Started\n\nStart editing `main.js` and use the Agent Panel to get AI assistance.\n",
+      "status": "completed",
+      "result": "🤖 Connecting to AI Engine...\n\nI've transformed the `README.md` into a more comprehensive welcome page. This includes:\n\n*   **A more inviting title and brief introduction.**\n*   **Expanded 'Getting Started' instructions** to clearly guide the user on how to begin coding and utilize the AI assistance.\n*   **A 'Project Structure' section** to give an overview of the key files.\n*   **A 'What's Next?' section** to encourage further development and exploration.\n\nThis updated `README.md` now serves as a proper onboarding document for anyone interacting with the project.",
+      "created_at": "2026-05-19T14:23:03.811Z",
+      "completed_at": "2026-05-19T14:23:11.799Z"
+    },
+    {
+      "task_id": "54abcef4-d3f6-45cc-ad9c-8b9e40c0fd1d",
+      "project_id": "aa77b691-1143-4340-ac6f-5a854dbbe4e6",
+      "file_id": "6615be16-7aaf-4c7a-97be-06c26836ce48",
+      "agent_type": "code",
+      "input_data": "// Welcome to Kiri Editor!\n// Start coding here...\n\nfunction main() {\n  console.log(\"Hello, World!\");\n}\n\nmain();\n",
+      "status": "completed",
+      "result": "🤖 Connecting to AI Engine...\n\nCreating a simple HTML welcome website\n\n### 🔧 Commands to run:\n- echo 'Website created successfully'",
+      "created_at": "2026-05-19T14:24:29.877Z",
+      "completed_at": "2026-05-19T14:24:32.872Z"
+    },
+    {
+      "task_id": "7ad74fe7-e720-4501-aae5-8cfce8bcb5f2",
+      "project_id": "aa77b691-1143-4340-ac6f-5a854dbbe4e6",
+      "file_id": "7d0f824f-c1d2-40c3-8016-81ff8572baf5",
+      "agent_type": "code",
+      "input_data": "<!DOCTYPE html>\n<html lang='en'>\n<head>\n\t<title>Welcome</title>\n</head>\n<body>\n\t<h1>Welcome to our website!</h1>\n</body>\n</html>",
+      "status": "completed",
+      "result": "🤖 Connecting to AI Engine...\n\nAdded CSS styles to create a 3D effect on the welcome text",
+      "created_at": "2026-05-19T14:25:01.488Z",
+      "completed_at": "2026-05-19T14:25:03.000Z"
+    }
+  ],
+  "versions": []
+}
