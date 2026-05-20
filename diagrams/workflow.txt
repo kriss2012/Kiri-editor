@@ -1,0 +1,33 @@
+WORKFLOW DIAGRAM – Kiri Editor Request Flow
+===========================================
+
+Step 1:  User writes a request in the editor
+         (e.g., "Generate docs for utils.py")
+              |
+Step 2:  Request sent to API Gateway
+              |
+Step 3:  API Gateway validates JWT token
+              |
+Step 4:  Request routed to Agent Manager Service
+              |
+Step 5:  Agent Manager creates a task record in SQL DB
+         Status: PENDING
+              |
+Step 6:  Task pushed to Message Queue (Kafka)
+         Topic: agent.documentation
+              |
+Step 7:  Documentation Agent picks the task
+              |
+Step 8:  Agent reads the file content from SQL DB
+              |
+Step 9:  Agent processes the task (AI model call)
+              |
+Step 10: Agent saves result to MongoDB (agent_outputs)
+              |
+Step 11: Task status updated in SQL DB: COMPLETED
+              |
+Step 12: Sync Service broadcasts result via WebSocket
+              |
+Step 13: Editor receives update and displays result
+              |
+Step 14: User sees the generated documentation
