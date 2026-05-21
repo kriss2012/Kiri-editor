@@ -26,7 +26,7 @@
     "appId": "com.kirieditor.app",
     "productName": "KiriEditor",
     "win": {
-      "target": "zip"
+      "target": "nsis"
     },
     "files": [
       "main.js",
