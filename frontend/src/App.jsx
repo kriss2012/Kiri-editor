@@ -155,15 +155,25 @@ export default function App() {
     // Auto-open first file
     if (projectData.files?.length > 0) {
       const first = projectData.files[0];
-      setActiveFileId(first.file_id);
-      setOpenTabs([first.file_id]);
+      setTimeout(() => handleFileSelect(first), 10);
     }
   }
 
   // ── File selection ────────────────────────────────────────
-  function handleFileSelect(file) {
+  async function handleFileSelect(file) {
     setActiveFileId(file.file_id);
     setOpenTabs(prev => prev.includes(file.file_id) ? prev : [...prev, file.file_id]);
+    
+    // Fetch file content dynamically if it is empty and we haven't loaded it locally
+    setLocalContent(prev => {
+      if (prev[file.file_id] === undefined && !file.file_content) {
+        EditorAPI.get(`/files/${file.file_id}`).then(({ data }) => {
+          setLocalContent(l => ({ ...l, [file.file_id]: data.file_content }));
+          setFiles(f => f.map(x => x.file_id === file.file_id ? { ...x, file_content: data.file_content } : x));
+        }).catch(e => console.error("Failed to load file content", e));
+      }
+      return prev;
+    });
   }
 
   function handleTabClose(fileId) {
@@ -545,7 +555,8 @@ export default function App() {
     logSystem(cmd, 'info', 'cli');
     try {
       const { data } = await TerminalAPI.post('/run', {
-        command: cmd
+        command: cmd,
+        projectId: project ? project.project_id : null
       });
       if (data.stdout && data.stdout.trim()) {
         logSystem(data.stdout.trim(), 'success', 'cli');
