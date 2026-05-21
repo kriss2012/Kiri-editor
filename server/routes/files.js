@@ -9,6 +9,25 @@ const router = express.Router();
 router.get('/:id', authMiddleware, (req, res) => {
   const file = db.prepare('SELECT * FROM files WHERE file_id = ?').get(req.params.id);
   if (!file) return res.status(404).json({ error: 'File not found' });
+
+  // Dynamically load content for local folders if empty
+  if (!file.file_content) {
+    const project = db.prepare('SELECT * FROM projects WHERE project_id = ?').get(file.project_id);
+    if (project) {
+      const fs = require('fs');
+      const path = require('path');
+      const projDir = project.custom_path || path.join(db.workspace, project.project_name);
+      const filePath = path.join(projDir, file.file_name);
+      if (fs.existsSync(filePath)) {
+        try {
+          file.file_content = fs.readFileSync(filePath, 'utf8');
+        } catch (e) {
+          file.file_content = "// Error reading file";
+        }
+      }
+    }
+  }
+
   res.json(file);
 });
 
