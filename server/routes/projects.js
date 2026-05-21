@@ -7,21 +7,28 @@ const path = require('path');
 
 const router = express.Router();
 
-function getFilesRecursively(dir, rootDir = dir) {
+const IGNORED_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mp3', '.exe', '.dll', '.so', '.dylib', '.zip', '.tar', '.gz', '.7z', '.rar', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.sqlite', '.db', '.ttf', '.woff', '.woff2', '.eot', '.ico', '.svg', '.webp'];
+
+function getFilesRecursively(dir, rootDir = dir, count = { val: 0 }) {
   let results = [];
   try {
     if (!fs.existsSync(dir)) return results;
     const list = fs.readdirSync(dir);
-    list.forEach((file) => {
-      if (['node_modules', '.git', 'dist', '.next', '.agent-backups'].includes(file) || file.startsWith('.')) return;
+    for (const file of list) {
+      if (count.val > 2000) break; // Hard limit on number of files scanned to prevent hangs
+      if (['node_modules', '.git', 'dist', '.next', '.agent-backups', 'build'].includes(file) || file.startsWith('.')) continue;
+      
+      const ext = path.extname(file).toLowerCase();
+      if (IGNORED_EXTS.includes(ext)) continue;
+
       const fullPath = path.join(dir, file);
       try {
         const stat = fs.statSync(fullPath);
         if (stat && stat.isDirectory()) {
-          results = results.concat(getFilesRecursively(fullPath, rootDir));
+          results = results.concat(getFilesRecursively(fullPath, rootDir, count));
         } else if (stat && stat.isFile()) {
-          // Ignore files larger than 3MB to prevent UI lockup and memory exhaustion
-          if (stat.size > 3 * 1024 * 1024) return;
+          // Ignore files larger than 256KB to prevent UI lockup and memory exhaustion
+          if (stat.size > 256 * 1024) continue;
           
           const relativePath = path.relative(rootDir, fullPath).replace(/\\/g, '/');
           results.push({
@@ -30,11 +37,12 @@ function getFilesRecursively(dir, rootDir = dir) {
             size: stat.size,
             mtime: stat.mtimeMs
           });
+          count.val++;
         }
       } catch (err) {
         console.error(`[File Scan Error] Skipping path ${fullPath}:`, err.message);
       }
-    });
+    }
   } catch (err) {
     console.error(`[Dir Scan Error] Skipping directory ${dir}:`, err.message);
   }
@@ -102,43 +110,34 @@ router.get('/:id', authMiddleware, (req, res) => {
       });
 
       // Refresh DB files list after duplicate cleanup
-      const cleanedDbFiles = db.prepare('SELECT * FROM files WHERE project_id = ? ORDER BY file_name').all(req.params.id);
+      const cleanedDbFiles = db.data.files.filter(f => f.project_id === req.params.id);
 
       // 2. Identify and delete DB entries for files that do not exist on disk
-      cleanedDbFiles.forEach(dbFile => {
-        const existsOnDisk = diskFiles.some(df => df.name === dbFile.file_name);
-        if (!existsOnDisk) {
-          try {
-            db.prepare('DELETE FROM files WHERE file_id = ?').run(dbFile.file_id);
-          } catch (e) {
-            console.error(`Failed to delete orphaned file item:`, e.message);
-          }
-        }
+      db.data.files = db.data.files.filter(f => {
+        if (f.project_id !== req.params.id) return true;
+        return diskFiles.some(df => df.name === f.file_name);
       });
 
-      // 3. For each file on disk, insert if missing or update if content differs (using size/mtime check)
+      // 3. For each file on disk, insert if missing or update if content differs
       diskFiles.forEach(df => {
         try {
-          const existing = db.prepare('SELECT * FROM files WHERE project_id = ? AND file_name = ?').get(req.params.id, df.name);
+          const existing = db.data.files.find(f => f.project_id === req.params.id && f.file_name === df.name);
+          const ext = df.name.split('.').pop() || 'javascript';
 
           if (!existing) {
-            const fileContent = fs.readFileSync(df.path, 'utf8');
-            const ext = df.name.split('.').pop() || 'javascript';
-            db.prepare('INSERT INTO files (file_id, project_id, file_name, file_content, language) VALUES (?, ?, ?, ?, ?)')
-              .run(uuidv4(), req.params.id, df.name, fileContent, ext);
-            
-            // Set size and mtime on the inserted object so future requests skip reading
-            const newlyInserted = db.prepare('SELECT * FROM files WHERE project_id = ? AND file_name = ?').get(req.params.id, df.name);
-            if (newlyInserted) {
-              newlyInserted.size = df.size;
-              newlyInserted.mtime = df.mtime;
-            }
-          } else if (existing.size !== df.size || existing.mtime !== df.mtime) {
-            const fileContent = fs.readFileSync(df.path, 'utf8');
-            db.prepare('UPDATE files SET file_content = ?, updated_at = CURRENT_TIMESTAMP WHERE file_id = ?')
-              .run(fileContent, existing.file_id);
-            
-            // Update cache stats on the object
+            db.data.files.push({
+                file_id: uuidv4(),
+                project_id: req.params.id,
+                file_name: df.name,
+                file_content: "", // We don't store local file content in the DB JSON to prevent bloat
+                language: ext,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                size: df.size,
+                mtime: df.mtime
+            });
+          } else {
+            existing.updated_at = new Date().toISOString();
             existing.size = df.size;
             existing.mtime = df.mtime;
           }
@@ -147,15 +146,21 @@ router.get('/:id', authMiddleware, (req, res) => {
         }
       });
       
-      // Save database changes
+      // Save database changes ONCE
       db.save();
     }
   } catch (err) {
     console.error(`Failed to sync project workspace directory:`, err.message);
   }
 
-  const files = db.prepare('SELECT * FROM files WHERE project_id = ? ORDER BY file_name').all(req.params.id);
-  res.json({ ...project, files });
+  // Fetch the final list of files (do NOT read all contents from disk synchronously to avoid OOM / hangs)
+  const dbFiles = db.data.files.filter(f => f.project_id === req.params.id).sort((a,b) => a.file_name.localeCompare(b.file_name));
+  
+  const populatedFiles = dbFiles.map(f => {
+    return { ...f, file_content: f.file_content || "" };
+  });
+
+  res.json({ ...project, files: populatedFiles });
 });
 
 // DELETE /api/projects/:id
